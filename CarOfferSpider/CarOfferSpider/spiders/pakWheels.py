@@ -49,7 +49,7 @@ class PakwheelsSpiderSpider(scrapy.Spider):
 
     def getUrl(self, item):
         # concatenating domain name with the path of the ad
-        return self.allowed_domains[0] + "/" + item.xpath('@href').extract()[0]
+        return self.allowed_domains[0] + item.xpath('@href').extract()[0]
 
     def getTitle(self, item):
         return item.xpath('@title').extract()[0]
@@ -57,7 +57,7 @@ class PakwheelsSpiderSpider(scrapy.Spider):
     def getPrice(self, item):
         # if there is Call in the string, then return Call for Price, else return Price
         temp = item.xpath('text()').extract()[0]
-        
+
         if ("Call" in temp):
             return "Call for Price"
         else:
