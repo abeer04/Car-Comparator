@@ -6,7 +6,7 @@ import ast
 # TODO: check keyword in Title
 
 class PakwheelsSpiderSpider(scrapy.Spider):
-    name = 'pakwheels_spider'
+    name = 'pakwheelsSpider'
     allowed_domains = ['www.pakwheels.com']
     start_urls = ['https://www.pakwheels.com/used-cars/search/-/?q=city+2016']
 
