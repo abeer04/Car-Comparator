@@ -9,25 +9,25 @@ class GarispiderSpider(scrapy.Spider):
 
     def parse(self, response):
         # scrape URLs
-        URLs = response.xpath('//div[@class="fleft featured block_ss"]/div[2]/div[1]/a')
+        URLs = response.xpath('//div[@id="cat-contents"]/div[2]/div[1]/a')
         # scrape Title
-        titles = response.xpath('//div[@class="fleft featured block_ss"]/div[2]/div[1]/a/h3/span')
+        titles = response.xpath('//div[@id="cat-contents"]/div[2]/div[1]/a/h3/span')
         # scrape prices
-        prices = response.xpath('//div[@class="fleft featured block_ss"]/div[3]/div[4]')
+        prices = response.xpath('//div[@id="cat-contents"]/div[3]/div[4]')
         # scrape Locations
-        locations = response.xpath('//div[@class="fleft featured block_ss"]/div[3]/div[3]')
+        locations = response.xpath('//div[@id="cat-contents"]/div[3]/div[3]')
         # scrape mileage
-        mileage = response.xpath('//div[@class="fleft featured block_ss"]/div[2]/div[2]/div[3]')
+        mileage = response.xpath('//div[@id="cat-contents"]/div[2]/div[2]/div[3]')
         # scrape Model
-        model = response.xpath('//div[@class="fleft featured block_ss"]/div[2]/div[2]/div[1]')
+        model = response.xpath('//div[@id="cat-contents"]/div[2]/div[2]/div[1]')
         # scrape fuel type
-        fuel_type = response.xpath('//div[@class="fleft featured block_ss"]/div[2]/div[3]')
+        fuel_type = response.xpath('//div[@id="cat-contents"]/div[2]/div[3]')
         #scrape engine
-        engine = response.xpath('//div[@class="fleft featured block_ss"]/div[2]/div[4]')
+        engine = response.xpath('//div[@id="cat-contents"]/div[2]/div[4]')
         # scrape transmission
-        transmission = response.xpath('//div[@class="fleft featured block_ss"]/div[2]/div[5]')
+        transmission = response.xpath('//div[@id="cat-contents"]/div[2]/div[5]')
         # scarpe Image URLs
-        images = response.xpath('//div[@class="fleft featured block_ss"]/div[2]/div[1]/span[1]/a[1]/img')
+        images = response.xpath('//div[@id="cat-contents"]/div[2]/div[1]/span[1]/a[1]/img')
 
         # list of dictionaries each representing a vehicle
         items = []
@@ -35,15 +35,15 @@ class GarispiderSpider(scrapy.Spider):
         for i in range(len(URLs)):
             item = {}
             item["url"] = self.getUrl(URLs[i]) # get URL
-            # item["title"] = self.getTitle(titles[i]) # get title
-            # item["price"] = self.getPrice(prices[i]) # get price
-            # item["location"] = self.getLocation(locations[i]) # get location
-            # item["modelDate"] = self.getModel(model[i]) # get model year
-            # item["mileage"] = self.getMileage(milage[i]) # get mileage
-            # item["fuelType"] = self.getFuel(fuel_type[i]) # get fuel type
-            # item["engine"] = self.getEngine(engine[i]) # get engine
-            # item["transmission"] = self.getTransmission(transmission[i]) # get transmission
-            # item["images"] = self.getImages(images[i]) # get image URLs
+            item["title"] = self.getTitle(titles[i]) # get title
+            item["price"] = self.getPrice(prices[i]) # get price
+            item["location"] = self.getLocation(locations[i]) # get location
+            item["modelDate"] = self.getModel(model[i]) # get model year
+            item["mileage"] = self.getMileage(milage[i]) # get mileage
+            item["fuelType"] = self.getFuel(fuel_type[i]) # get fuel type
+            item["engine"] = self.getEngine(engine[i]) # get engine
+            item["transmission"] = self.getTransmission(transmission[i]) # get transmission
+            item["images"] = self.getImages(images[i]) # get image URLs
             items.append(item)
             # yield item
 
