@@ -51,6 +51,7 @@ class PakwheelsSpiderSpider(scrapy.Spider):
 
                 if (item not in self.vehicles):
                     self.vehicles.append(item)
+                    yield item
 
         # handling pagination
         next_page_url = response.xpath("//li[@class='next_page']//a/@href").extract_first()
@@ -58,20 +59,20 @@ class PakwheelsSpiderSpider(scrapy.Spider):
             absolute_next_page_url = response.urljoin(next_page_url)
             yield scrapy.Request(absolute_next_page_url)
 
-    def closed(self, reason):
-        # will be called when the crawler process ends
+    # def closed(self, reason):
+    #     # will be called when the crawler process ends
 
-        # write data in a file to view the data scraped
-        with open('file.txt', 'a+') as f:
-            for item in self.vehicles:
-                f.write("%s\n" % item)
+    #     # write data in a file to view the data scraped
+    #     with open('file.txt', 'a+') as f:
+    #         for item in self.vehicles:
+    #             f.write("%s\n" % item)
 
-        sortedItems = sorted(self.vehicles, key = lambda i: (i["price"], i["mileage"], -i["modelDate"]))
+    #     sortedItems = sorted(self.vehicles, key = lambda i: (i["price"], i["mileage"], -i["modelDate"]))
 
-        # write sorted data in a file to view the data scraped
-        with open('sortedFile.txt', 'a+') as f:
-            for item in sortedItems:
-                f.write("%s\n" % item)
+    #     # write sorted data in a file to view the data scraped
+    #     with open('sortedFile.txt', 'a+') as f:
+    #         for item in sortedItems:
+    #             f.write("%s\n" % item)
 
     def getUrl(self, item):
         # concatenating domain name with the path of the ad
