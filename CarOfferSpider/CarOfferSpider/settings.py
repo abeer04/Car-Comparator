@@ -14,6 +14,8 @@ BOT_NAME = 'CarOfferSpider'
 SPIDER_MODULES = ['CarOfferSpider.spiders']
 NEWSPIDER_MODULE = 'CarOfferSpider.spiders'
 
+# Reduces the debug info that is displayed on the terminal while the scrapper is running
+LOG_LEVEL = 'INFO'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'CarOfferSpider (+http://www.yourdomain.com)'
