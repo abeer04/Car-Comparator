@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
+# import sys
+# sys.path.insert(0, '/demoCode/TestComparator/DjangoTestTheodo/CarComparator/CarOfferSpider')
 import scrapy
 from bs4 import BeautifulSoup as bs4
-from scrapy.crawler import Crawler, CrawlerProcess
-from scrapy.utils.project import get_project_settings
-from scrapy import signals
-from urllib.request import urlopen as uReq
 import time
+import json
 
 class OlxspiderSpider(scrapy.Spider):
     name = 'olxSpider'
@@ -15,7 +14,7 @@ class OlxspiderSpider(scrapy.Spider):
     otherInfo = []
     start = time.time()
 
-    def __init__(self, words, startUrl, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Parameters
         ----------
@@ -23,88 +22,99 @@ class OlxspiderSpider(scrapy.Spider):
         startUrl : str (The url of the page to scrape data from)
         """
         super(OlxspiderSpider, self).__init__(*args, **kwargs)
-        self.words = words
-        self.start_urls = [startUrl]
+        # self.words = words
+        # self.start_urls = [startUrl]
+        self.words = kwargs.get('words')
+        self.start_urls.append(kwargs.get('startUrl'))
 
     def parse(self, response):
-        links = response.xpath('//li[@class="EIR5N "]/a')
-        data = response.xpath('//li[@class="EIR5N "]/a/div')
-
-        start = time.time()
-        for i in range(len(links)):
-            if (self.filterAd(self.words, self.getTitle(data[i]))):
-                item = {}
-                item["url"] = self.getUrl(links[i])
-                item["title"] = self.getTitle(data[i])
-                item["price"] = self.getPrice(data[i])
-                item["location"] = self.getLocation(data[i])
-                item["modelDate"] = self.getModel(data[i])
-                item["mileage"] = self.getMileage(data[i])
-                item["from"] = 'olx.com.pk'
-                # item["other"] = response.follow(links[i], callback=self.getOther)
-                # item.update(self.getFuelRegImage(item["url"]))
-                # item["fuelType"]
-                # item["engine"]
-                # item["transmission"]
-                # item["images"] = self.getImages(links[i])
-                self.items.append(item)
-                yield item
-        # print(self.items)
-
-        for i in range(len(self.items)):
-            request = scrapy.Request(self.items[i]['url'], callback = self.getOther)
-            request.meta['index'] = i
+        i = 1
+        while i<=5:
+            link = "https://www.olx.com.pk/api/relevance/search?facet_limit=100&location=4060673&location_facet_limit=6&page="+str(i)+"&query="+self.queryGen()+"&user=168fc2589a5x19e7ca7f"
+            request = scrapy.Request(link, callback=self.parser)
+            i+=1
             yield request
-        # print(f"Time Taken: {time.time()-start}")
+
+    def parser(self,response):
+        soup = bs4(response.text,'lxml')
+        soup = soup.__repr__()
+        soup = soup.replace('<html><body><p>','')
+        soup = soup.replace('</p></body></html>','')
+        response_json = json.loads(soup)
+        json_data = response_json['data']
+        for i in range(len(json_data)):
+            if (self.filterAd(self.words,json_data[i])):
+                item = {}
+
+                #car item
+                carItem = {}
+                carItem["url"] = self.getUrl(json_data[i])
+                # carItem["keywords"] = ' '.join(word for word in self.words)
+                carItem["title"] = json_data[i]['title']
+                carItem["price"] = self.getPrice(json_data[i])
+                carItem["location"] = json_data[i]['locations_resolved']['ADMIN_LEVEL_3_name']
+                carItem["model"] = self.getModel(json_data[i])
+                carItem["mileage"] = self.getMileage(json_data[i])
+                # carItem["source"] = 'olx.com.pk'
+                carItem["fuel"] = self.getFuel(json_data[i])
+                # self.items.append(item)
+                carItem["engine"] = 'NA'
+                carItem["transmission"] = 'NA'
+                
+                #image item
+                imageItem = {}
+                imageItem["url"] = self.getImages(json_data[i]["images"])# get image URLs
+
+                item["carItem"] = carItem
+                item["imageItem"] = imageItem
+
+                # print(item)
+                yield item
 
     def getUrl(self, item):
-        return 'http://' + self.allowed_domains[0] + item.xpath('@href').extract()[0]
-
-    #Just gets the price in digits and strips off everything else
-    def getPrice(self, item):
-        try:
-            return int(item.xpath('span[1]/text()').extract()[0].strip('Rs ').replace(',',''))
-        except:
-            return 'Error at Price'
-
-    def getTitle(self, item):
-        try:
-            return item.xpath('span[3]/text()').extract()[0]
-        except:
-            return 'Error at Title'
+        relative_url = item['title'].replace('/','')+' '+'iid'+' '+item['id']
+        relative_url = relative_url.replace(' ', '-')
+        return self.allowed_domains[0]+'/item/'+relative_url
 
     def getModel(self, item):
-        try:
-            return int(item.xpath('span[2]/text()').extract()[0][:4])
-        except:
-            return 'Error at Model'
+        rtVal = "NA"
+        for model in filter(lambda y: y['key']=='year',item['parameters']):
+            rtVal = int(model['value'])
+        return rtVal
 
     def getMileage(self, item):
-        try:
-            return int(item.xpath('span[2]/text()').extract()[0][7:].lower().strip('km').strip(' '))
-        except:
-            return 'Error at Mileage'
+        rtVal = "NA"
+        for mileage in filter(lambda y: y['key']=='mileage',item['parameters']):
+            rtVal = int(mileage['value'])
+        return rtVal
 
-    def getLocation(self,item):
-        try:
-            return item.xpath('div/span[1]/text()').extract()[0]
-        except:
-            return 'Error at Mileage'
+    def getFuel(self, item):
+        rtVal = "NA"
+        for fuel in filter(lambda y: y['key']=='petrol',item['parameters']):
+            rtVal = fuel['value']
+        return rtVal
 
-    #Error: Images are added using js, need to find some way else to extract their links
-    def getOther(self, response):
-        try:
-            soup = bs4(response.text, "lxml")
-            carDetails = soup.findAll("span",{"class": "_1GWCT"})
-            image = soup.findAll("img",{"class": "_3DF4u"})
-            ret = {"fuelType":carDetails[4].text, "registration":carDetails[6].text, "image":image[0]["src"]}
-            index = response.meta['index']
-            self.items[index].update(ret)
-            # yield ret
-        except:
-            return None
+    def getRegCity(self, item):
+        rtVal = "NA"
+        for city in filter(lambda y: y['key']=='registeration_city',item['parameters']):
+            rtVal = city['value']
+        return rtVal
 
-    def filterAd(self, words, title):
+    def getImages(self, item):
+        listOfImages = []
+        for image_dict in item:
+            listOfImages.append(image_dict["full"]["url"])
+        retStr = ", ".join(listOfImages)
+        return retStr
+        
+    def getPrice(self,item):
+        try:
+            rtVal = int(item['price']['value']['raw'])
+            return rtVal
+        except:
+            return "NA"
+
+    def filterAd(self, words, item):
         """
         Parameters
         ----------
@@ -116,42 +126,25 @@ class OlxspiderSpider(scrapy.Spider):
         boolean (a boolean representing if all keywords are in ad title)
         """
         count = 0
-        title = title.lower()
+        title = item['title'].lower()
 
         for word in words:
             if word.lower() in title:
                 count += 1
 
         if count == len(words):
-            return True
-
+            if self.getPrice(item)!="NA":
+                if self.getMileage(item)!="NA":
+                    if self.getModel(item)!="NA":
+                        return True
         return False
 
-class OlxAuxSpider(scrapy.Spider):
-    """docstring for OlxAuxSpider."""
-    name = 'olx_aux_spider'
-    allowed_domains = ['olx.com.pk']
-    start_urls = []
-
-    def __init__(self, startUrl='', *arg, **kwargs):
-        super(OlxAuxSpider, self).__init__()
-        self.start_urls = [startUrl]
-
-    def parse(self, response):
-        soup = bs4(response.text, 'lxml')
-        carDetails = soup.findAll("span",{"class": "_1GWCT"})
-        image = soup.findAll("img",{"class": "_3DF4u"})
-        # ret = {"fuelType":carDetails[4].text, "registration":carDetails[6].text, "image":image[0]["src"]}
-        print(carDetails)
-        # return ret
-
-# def collect_items(item, response, spider):
-#     items.append(item)
-
-#
-# crawler = Crawler(OlxspiderSpider)
-# crawler.signals.connect(collect_items, signals.item_scraped)
-#
-# process = CrawlerProcess(get_project_settings())
-# process.crawl(crawler, 'words', 'https://www.olx.com.pk/lahore_g4060673/q-city-2016')
-# process.start()
+    def queryGen(self):
+        rtVal = ''
+        listOfWords = self.words.split(' ')
+        for i in range(len(listOfWords)):
+            if i==0:
+                rtVal += listOfWords[i]
+            else:
+                rtVal += "-"+listOfWords[i]
+        return rtVal

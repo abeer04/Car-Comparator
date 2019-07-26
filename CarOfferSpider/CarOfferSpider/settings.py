@@ -9,6 +9,19 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
+import os
+import sys
+
+##### DJANGO INTEGRATION #####
+sys.path.append(os.path.dirname(os.path.abspath('.')))
+# CarCompare refers to Django project name
+os.environ['DJANGO_SETTINGS_MODULE'] = 'CarCompare.settings'
+
+# This is required only if Django Version > 1.8
+import django
+django.setup()
+##### DJANGO INTEGRATION #####
+
 BOT_NAME = 'CarOfferSpider'
 
 SPIDER_MODULES = ['CarOfferSpider.spiders']
@@ -29,7 +42,7 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 3
+# DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -66,9 +79,9 @@ DOWNLOAD_DELAY = 3
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'CarOfferSpider.pipelines.CarofferspiderPipeline': 300,
-#}
+ITEM_PIPELINES = {
+    'CarOfferSpider.pipelines.CarofferspiderPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
