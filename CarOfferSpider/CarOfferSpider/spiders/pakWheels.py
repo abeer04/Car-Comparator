@@ -67,10 +67,10 @@ class PakwheelsSpiderSpider(scrapy.Spider):
         self.words = kwargs.get('words')
         # self.start_urls.append(kwargs.get('startUrl'))
         # self.start_urls = kwargs.get('startUrl').split(' ')
-        urls = ' '.join(pakURLs(' '.join(self.words)))
-        self.start_urls = urls.split(' ')
         # self.words = ['city', '2016']
-        # self.start_urls.append("https://www.pakwheels.com/used-cars/search/-/?q=city+2016")
+        urls = pakURLs(' '.join(self.words))
+        self.start_urls = urls.split(' ')
+        # print(self.start_urls)
         # self.start = time()
         super(PakwheelsSpiderSpider, self).__init__(*args, **kwargs)
 
