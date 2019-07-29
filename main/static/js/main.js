@@ -9,9 +9,9 @@ $(document).ready(function()
             data: null,
             taskIdPak: null,
             taskIdOlx: null,
-            // taskIdGari: null,
+            taskIdGari: null,
             uniqueIdPak: null,
-            // uniqueIdGari: null,
+            uniqueIdGari: null,
             uniqueIdOlx: null,
             filters: {
                 min_price : 0,
@@ -95,10 +95,10 @@ $(document).ready(function()
             data: {
                 task_id_pak: home.state.taskIdPak,
                 task_id_olx: home.state.taskIdOlx,
-                // task_id_gari: home.state.taskIdGari,
+                task_id_gari: home.state.taskIdGari,
                 unique_id_pak: home.state.uniqueIdPak,
                 unique_id_olx: home.state.uniqueIdOlx,
-                // unique_id_gari: home.state.uniqueIdGari
+                unique_id_gari: home.state.uniqueIdGari
             },
             success: function(response) {
                 /* Crawling Ended */
@@ -155,10 +155,10 @@ $(document).ready(function()
                     // update the state with new task and unique id
                     home.state.taskIdPak = response.task_id_pak;
                     home.state.taskIdOlx = response.task_id_olx;
-                    // home.state.taskIdOlx = response.task_id_gari;
+                    home.state.taskIdGari = response.task_id_gari;
                     home.state.uniqueIdPak = response.unique_id_pak;
                     home.state.uniqueIdOlx = response.unique_id_olx;
-                    // home.state.uniqueIdOlx = response.unique_id_gari;
+                    home.state.uniqueIdGari = response.unique_id_gari;
                     home.state.crawlingStatus = response.status;
                     // ####################### HERE ########################
                     // after updating state

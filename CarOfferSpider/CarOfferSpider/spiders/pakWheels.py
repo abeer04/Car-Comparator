@@ -44,9 +44,9 @@ def pakURLs(keyword):
     all_urls = [my_url + "&page=" + str(i) for i in range(1, last_page + 1)]
     # print(all_urls)
 
-    all_url_string = ' '.join(all_urls)
+    # all_url_string = ' '.join(all_urls)
 
-    return all_url_string
+    return all_urls
 
 class PakwheelsSpiderSpider(scrapy.Spider):
     name = 'pakwheelsSpider'
@@ -65,17 +65,13 @@ class PakwheelsSpiderSpider(scrapy.Spider):
         # We are going to pass these args from our django view.
         # To make everything dynamic, we need to override them inside __init__ method
         self.words = kwargs.get('words')
-        # self.start_urls.append(kwargs.get('startUrl'))
         # self.start_urls = kwargs.get('startUrl').split(' ')
-        # self.words = ['city', '2016']
-        urls = pakURLs(' '.join(self.words))
-        self.start_urls = urls.split(' ')
+        # self.words = ['city', '2009']
+        self.start_urls = pakURLs(' '.join(self.words))
         # print(self.start_urls)
-        # self.start = time()
         super(PakwheelsSpiderSpider, self).__init__(*args, **kwargs)
 
     def parse(self, response):
-        # scrape URLs and Titles
         # scrape URLs and Titles
         data = response.xpath('//li[@class="classified-listing  "]/div/div[2]/div[1]/div/div/a')
         # scrape prices
@@ -109,7 +105,6 @@ class PakwheelsSpiderSpider(scrapy.Spider):
 
                 item["carItem"] = carItem
                 item["imageItem"] = imageItem
-                # print(item)
                 yield item
 
                 # checking for duplicates

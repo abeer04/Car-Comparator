@@ -34,9 +34,9 @@ class CarofferspiderPipeline(object):
         keyword.save()
         # self.keyword["unique_id"] = self.unique_id
         # self.keyword.save()
-
-# example
-# item = {'keywordItem': {'keyword': 'city, 2016'}, 'carItem': {'url': 'www.pakwheels.com/used-cars/honda-city-2016-for-sale-in-multan-3052872', 'title': 'Honda City  2016 Aspire Prosmatec 1.3 i-VTEC', 'price': 1875000, 'location': 'Multan', 'model': 2016, 'mileage': 39000, 'fuel': 'Petrol', 'engine': '1300 cc', 'transmission': 'Automatic'}, 'imageItem': {'url': 'https://cache4.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796065.jpg, https://cache1.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796066.jpg, https://cache2.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796060.jpg, https://cache1.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796063.jpg'}}
+#
+# # example
+# # item = {'keywordItem': {'keyword': 'city, 2016'}, 'carItem': {'url': 'www.pakwheels.com/used-cars/honda-city-2016-for-sale-in-multan-3052872', 'title': 'Honda City  2016 Aspire Prosmatec 1.3 i-VTEC', 'price': 1875000, 'location': 'Multan', 'model': 2016, 'mileage': 39000, 'fuel': 'Petrol', 'engine': '1300 cc', 'transmission': 'Automatic'}, 'imageItem': {'url': 'https://cache4.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796065.jpg, https://cache1.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796066.jpg, https://cache2.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796060.jpg, https://cache1.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796063.jpg'}}
     def process_item(self, item, spider):
         # pass
         # self.items.append(item['url'])
@@ -57,9 +57,15 @@ class CarofferspiderPipeline(object):
         car.save()
 
         imageItem = item["imageItem"]["url"]
-        for imageUrl in imageItem.split(", "):
+        if (len(imageItem) > 1):
+            for imageUrl in imageItem.split(", "):
+                image = Image()
+                image.url = imageUrl
+                image.car_id = car
+                image.save()
+        else:
             image = Image()
-            image.url = imageUrl
+            image.url = imageItem
             image.car_id = car
             image.save()
 

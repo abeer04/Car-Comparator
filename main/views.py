@@ -53,7 +53,7 @@ def olxURL(query):
 
 # generate url for gari
 def gariURL():
-    url='http://www.gari.pk/used-cars-search/'
+    url='http://www.gari.pk/search-car-ajax.php'
     return url
 
 # generate JSON response
@@ -109,7 +109,7 @@ def crawl(request):
         try:
             pakKeywordItem = Keyword.objects.filter(keyword=keyword).order_by("-expiryTime")[0]
             olxKeywordItem = Keyword.objects.filter(keyword=keyword).order_by("-expiryTime")[1]
-            # gariKeywordItem = Keyword.objects.filter(keyword=keyword).order_by("-expiryTime")[2]
+            gariKeywordItem = Keyword.objects.filter(keyword=keyword).order_by("-expiryTime")[2]
         # Keyword not found
         except IndexError:
             flag = False
@@ -121,9 +121,9 @@ def crawl(request):
         if (flag):
             pakData = generateResponse(pakKeywordItem)
             olxData = generateResponse(olxKeywordItem)
-            # garidata = generateResponse(gariKeywordItem)
-            # + garidata
-            data = pakData + olxData
+            garidata = generateResponse(gariKeywordItem)
+
+            data = pakData + olxData + garidata
             sortedItems = sorted(data, key = lambda i: (i["price"], i["mileage"], -i["model"]))
             jsonData = json.dumps(sortedItems)
             return JsonResponse({'data': jsonData})
@@ -138,12 +138,12 @@ def crawl(request):
             # create a unique id
             unique_id_pak = str(uuid4())
             unique_id_olx = str(uuid4())
-            # unique_id_gari = str(uuid4())
+            unique_id_gari = str(uuid4())
 
             # get the url
             pakUrl = pakURL(keyword)
             olxUrl = olxURL(keyword)
-            # gariUrl = gariURL()
+            gariUrl = gariURL()
 
             # This is the custom settings for scrapy spider.
             # We can send anything we want to use it inside spiders and pipelines.
@@ -159,28 +159,30 @@ def crawl(request):
                 'USER_AGENT': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
                 'ROBOTSTXT_OBEY' : False
             }
-            # gariSettings = {
-            #     'unique_id': unique_id_gari, # unique ID for each record for DB
-            #     'words': keyword, # searched keyword
-            #     'USER_AGENT': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
-            # }
+            gariSettings = {
+                'unique_id': unique_id_gari, # unique ID for each record for DB
+                'words': keyword, # searched keyword
+                'USER_AGENT': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+            }
 
             # Here we schedule a new crawling task from scrapyd.
             # Notice that settings is a special argument name.
             # But we can pass other arguments, though.
             # This returns a ID which belongs and will be belong to this task
             # We are going to use that to check task's status.
-            keyword = keyword.split(" ")
+            keyword = keyword.split(' ')
+            taskIdGari = scrapyd.schedule('default', 'gariSpider', settings=gariSettings, words=keyword,
+                                          startUrl=gariUrl)
             taskIdOlx = scrapyd.schedule('default', 'olxSpider', settings=olxSettings, words=keyword, startUrl=olxUrl)
-            taskIdPak = scrapyd.schedule('default', 'pakwheels', settings=pakSettings, words=keyword, startUrl=pakUrl)
-            # taskIdGari = scrapyd.schedule('default', 'gariSpider', settings=gariSettings, words=keyword, startUrl=gariUrl)
+            taskIdPak = scrapyd.schedule('default', 'pakwheelsSpider', settings=pakSettings, words=keyword, startUrl=pakUrl)
+
 
             return JsonResponse({'task_id_pak': taskIdPak,
                                 'task_id_olx': taskIdOlx,
-                                # 'task_id_gari': taskIdGari,
+                                'task_id_gari': taskIdGari,
                                 'unique_id_pak': unique_id_pak,
                                 'unique_id_olx': unique_id_olx,
-                                # 'unique_id_gari': unique_id_gari,
+                                'unique_id_gari': unique_id_gari,
                                 'status': 'started'})
 
     # Get requests are for getting result of a specific crawling task
@@ -192,14 +194,14 @@ def crawl(request):
         # And if crawling is completed, we respond back with a crawled data.
         task_id_pak = request.GET.get('task_id_pak', None)
         task_id_olx = request.GET.get('task_id_olx', None)
-        # task_id_gari = request.GET.get('task_id_gari', None)
+        task_id_gari = request.GET.get('task_id_gari', None)
         unique_id_pak = request.GET.get('unique_id_pak', None)
         unique_id_olx = request.GET.get('unique_id_olx', None)
-        # unique_id_gari = request.GET.get('unique_id_gari', None)
+        unique_id_gari = request.GET.get('unique_id_gari', None)
 
         # if task_id or unique_id are not found in GET request
-        #  or not task_id_gari or not unique_id_gari
-        if not task_id_pak or not unique_id_pak or not task_id_olx or not unique_id_olx:
+
+        if not task_id_pak or not unique_id_pak or not task_id_olx or not unique_id_olx or not task_id_gari or not unique_id_gari:
             response = JsonResponse({"error": "missing arguments"})
             response.status_code = 400 # Bad request
             return response
@@ -210,22 +212,22 @@ def crawl(request):
         # Possible results are -> pending, running, finished
         pakStatus = scrapyd.job_status('default', task_id_pak)
         olxStatus = scrapyd.job_status('default', task_id_olx)
-        # gariStatus = scrapyd.job_status('default', task_id_gari)
+        gariStatus = scrapyd.job_status('default', task_id_gari)
 
-        #  and (gariStatus == 'finished')
-        if (pakStatus == 'finished') and (olxStatus == 'finished'):
+
+        if (pakStatus == 'finished') and (olxStatus == 'finished') and (gariStatus == 'finished'):
             try:
                 # this is the unique_id that we created even before crawling started.
                 keywordItemPak = Keyword.objects.get(unique_id=unique_id_pak)
                 keywordItemOlx = Keyword.objects.get(unique_id=unique_id_olx)
-                # keywordItemGari = Keyword.objects.get(unique_id=gari_unique_id)
+                keywordItemGari = Keyword.objects.get(unique_id=unique_id_gari)
 
                 jsonDataPak = generateResponse(keywordItemPak)
                 jsonDataOlx = generateResponse(keywordItemOlx)
-                # jsonDataGari = generateResponse(keywordItemGari)
+                jsonDataGari = generateResponse(keywordItemGari)
 
-                # +jsonDataGari
-                data = jsonDataOlx+jsonDataPak
+
+                data = jsonDataOlx+jsonDataPak+jsonDataGari
                 sortedItems = sorted(data, key = lambda i: (i["price"], i["mileage"], -i["model"]))
                 jsonData = json.dumps(sortedItems)
                 return JsonResponse({'data': jsonData})
@@ -234,5 +236,4 @@ def crawl(request):
                 response.status_code = 404 # Not found
                 return response
         else:
-            #  and Gari is {gariStatus}
-            return JsonResponse({'status': f"olx is {olxStatus} and pakwheels is {pakStatus}"})
+            return JsonResponse({'status': f"olx is {olxStatus} and pakwheels is {pakStatus} and Gari is {gariStatus}"})
