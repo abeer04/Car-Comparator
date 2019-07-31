@@ -10,6 +10,8 @@ from urllib.request import urlopen as uReq
 from bs4 import BeautifulSoup as soup
 import re
 
+import io
+
 # TODO: comments
 
 def pakURLs(keyword):
@@ -44,7 +46,7 @@ def pakURLs(keyword):
     all_urls = [my_url + "&page=" + str(i) for i in range(1, last_page + 1)]
     # print(all_urls)
 
-    # all_url_string = ' '.join(all_urls)
+    all_url_string = ' '.join(all_urls)
 
     return all_urls
 
@@ -52,6 +54,7 @@ class PakwheelsSpiderSpider(scrapy.Spider):
     name = 'pakwheelsSpider'
     allowed_domains = ['www.pakwheels.com']
     # start_urls = ['http://www.pakwheels.com/']
+    words=[]
     # words = ['city', '2016']
     start_urls = []
 
@@ -67,11 +70,15 @@ class PakwheelsSpiderSpider(scrapy.Spider):
         self.words = kwargs.get('words')
         # self.start_urls = kwargs.get('startUrl').split(' ')
         # self.words = ['city', '2009']
-        self.start_urls = pakURLs(' '.join(self.words))
+        urls = pakURLs(self.words)
+        for url in urls:
+            self.start_urls.append(url)
         # print(self.start_urls)
         super(PakwheelsSpiderSpider, self).__init__(*args, **kwargs)
 
     def parse(self, response):
+        with io.open("pk.html", "w", encoding="utf-8") as f:
+            f.write(response.text)
         # scrape URLs and Titles
         data = response.xpath('//li[@class="classified-listing  "]/div/div[2]/div[1]/div/div/a')
         # scrape prices

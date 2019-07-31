@@ -5,8 +5,9 @@ import io
 class GarispiderSpider(scrapy.Spider):
     name = 'gariSpider'
     allowed_domains = ['www.gari.pk']
-    start_urls = ['http://www.gari.pk/search-car-ajax.php']
-    words=[]
+    # start_urls = ['http://www.gari.pk/search-car-ajax.php']
+    start_urls = []
+    words = []
 #     lua_script = """function find_search_input(inputs)
 #   if #inputs == 1 then
 #     return inputs[1]
@@ -18,10 +19,10 @@ class GarispiderSpider(scrapy.Spider):
 #     end
 #   end
 # end
-#
+
 # function find_input(forms)
 #   local potential = {}
-#
+
 #   for _, form in ipairs(forms) do
 #     local inputs = form.node:querySelectorAll('input:not([type="hidden"])')
 #     if #inputs ~= 0 then
@@ -29,34 +30,34 @@ class GarispiderSpider(scrapy.Spider):
 #       if input then
 #         return form, input
 #       end
-#
+
 #       potential[#potential + 1] = {input=inputs[1], form=form}
 #     end
 #   end
-#
+
 #   return potential[1].form, potential[1].input
 # end
-#
+
 # function main(splash, args)
 #   -- find a form and submit "splash" to it
 #   local function search_for_splash()
 #     local forms = splash:select_all('form')
-#
+
 #     if #forms == 0 then
 #       error('no search form is found')
 #     end
-#
+
 #     local form, input = find_input(forms)
-#
+
 #     if not input then
 #       error('no search form is found')
 #     end
-#
+
 #     assert(input:send_keys('honda'))
 #     assert(splash:wait(0))
 #     assert(form:submit())
 #   end
-#
+
 #   -- main rendering script
 #   assert(splash:go(args.url))
 #   assert(splash:wait(1))
@@ -67,7 +68,7 @@ class GarispiderSpider(scrapy.Spider):
 #   button.node:setAttribute('href', "javascript: search_query('', (10))");
 #   button:mouse_click()
 #   assert(splash:wait(15))
-#
+
 #   return {html = splash:html()}
 #   end"""
 
@@ -81,13 +82,18 @@ class GarispiderSpider(scrapy.Spider):
         # We are going to pass these args from our django view.
         # To make everything dynamic, we need to override them inside __init__ method
         self.words = kwargs.get('words')
+        print(self.words)
         self.start_urls.append(kwargs.get('startUrl'))
         # self.words = ['civic', '2016']
 
         super(GarispiderSpider, self).__init__(*args, **kwargs)
 
     def parse(self,response):
-        params = 'cars_mini/,/c_date desc/'+" ".join(str(x) for x in self.words)+'/100'
+        # cars_mini/,/c_date desc/civic 2016/10
+        # keywords=' '.join(self.words)
+        keywords=self.words
+        params = 'cars_mini/,/c_date desc/'+keywords+'/100'
+        print(params)
         yield scrapy.FormRequest(self.start_urls[0], callback=self.parse_cars, method='POST',
                                  formdata={'search_param': params})
 
@@ -154,27 +160,29 @@ class GarispiderSpider(scrapy.Spider):
             item["imageItem"] = imageItem
             yield item
 
-        # print(items)
+        # print(item)
 
         # write data in a file to view the data scraped
-
+        # with io.open("items.txt", "w", encoding="utf-8") as f:
+        #     f.write(str(item))
 
     def getUrl(self, item):
-        # concatenating domain name with the path of the ad
-        return self.allowed_domains[0] + item.xpath('@href').extract()[0]
-
+        # concatenating domain name with the path of the 
+        
+        return item.xpath('@href').extract()[0][7:]
     def getTitle(self, item):
         return item.xpath('text()').extract()[0]
 
     def getPrice(self, item):
         try:
             temp = item.xpath('text()').extract()[0]
-            temp = temp.replace(" ", "")
-            temp = temp.replace("\n", "")
-            temp = temp.replace("Rs", "")
-            temp = temp.replace("Lacs", "")
-            temp = int(temp)*100000
-
+            for token in temp.split():
+                try:
+                    # if this succeeds, you have your (first) float
+                    temp2=temp2+float(token)
+                except ValueError:
+                    pass  
+            temp = float(temp)*100000
             return temp
         except:
             return 0
@@ -208,6 +216,7 @@ class GarispiderSpider(scrapy.Spider):
     def getTransmission(self, item):
         try:
             temp = item.xpath('text()').extract()[0]
+            # print(temp)
             temp = temp.replace(" ", "")
             temp = temp.replace("\n", "")
             return temp
@@ -215,7 +224,7 @@ class GarispiderSpider(scrapy.Spider):
             return 0
 
     def getImages(self, item):
-        return item.xpath('@src').extract()
+        return item.xpath('@src').extract()[0]
 
         # final list of images
         # images = []

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Define your item pipelines here
-#
+import io
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
@@ -34,7 +34,7 @@ class CarofferspiderPipeline(object):
         keyword.save()
         # self.keyword["unique_id"] = self.unique_id
         # self.keyword.save()
-#
+
 # # example
 # # item = {'keywordItem': {'keyword': 'city, 2016'}, 'carItem': {'url': 'www.pakwheels.com/used-cars/honda-city-2016-for-sale-in-multan-3052872', 'title': 'Honda City  2016 Aspire Prosmatec 1.3 i-VTEC', 'price': 1875000, 'location': 'Multan', 'model': 2016, 'mileage': 39000, 'fuel': 'Petrol', 'engine': '1300 cc', 'transmission': 'Automatic'}, 'imageItem': {'url': 'https://cache4.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796065.jpg, https://cache1.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796066.jpg, https://cache2.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796060.jpg, https://cache1.pakwheels.com/ad_pictures/2679/honda-city-aspire-prosmatec-2016-26796063.jpg'}}
     def process_item(self, item, spider):
@@ -45,6 +45,7 @@ class CarofferspiderPipeline(object):
 
         carItem = item["carItem"]
         car = Car()
+        print("================="+carItem["url"])
         car.url = carItem["url"] # get URL
         car.title = carItem["title"] # get title
         car.price = carItem["price"] # get price
@@ -73,5 +74,6 @@ class CarofferspiderPipeline(object):
         keywordCar.keyword_id = self.keyword
         keywordCar.car_id = car
         keywordCar.save()
-
+        # with io.open("items.txt", "a", encoding="utf-8") as f:
+        #     f.write(str(item))
         return item

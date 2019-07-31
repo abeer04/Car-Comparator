@@ -13,6 +13,7 @@ class OlxspiderSpider(scrapy.Spider):
     items = []
     otherInfo = []
     start = time.time()
+    words = []
 
     def __init__(self, *args, **kwargs):
         """
@@ -25,12 +26,14 @@ class OlxspiderSpider(scrapy.Spider):
         # self.words = words
         # self.start_urls = [startUrl]
         self.words = kwargs.get('words')
+        self.words = self.words.split(' ')
         self.start_urls.append(kwargs.get('startUrl'))
 
     def parse(self, response):
         i = 1
-        while i<=5:
+        while i<6:
             link = "https://www.olx.com.pk/api/relevance/search?facet_limit=100&location=4060673&location_facet_limit=6&page="+str(i)+"&query="+self.queryGen()+"&user=168fc2589a5x19e7ca7f"
+            print(link)
             request = scrapy.Request(link, callback=self.parser)
             i+=1
             yield request
@@ -132,16 +135,18 @@ class OlxspiderSpider(scrapy.Spider):
             if word.lower() in title:
                 count += 1
 
-        if count == len(words):
-            if self.getPrice(item)!="NA":
-                if self.getMileage(item)!="NA":
-                    if self.getModel(item)!="NA":
-                        return True
+        # if count == len(words):
+        if self.getPrice(item)!="NA":
+            if self.getMileage(item)!="NA":
+                if self.getModel(item)!="NA":
+                    return True
         return False
 
     def queryGen(self):
         rtVal = ''
-        listOfWords = self.words.split(' ')
+        listOfWords = self.words
+        print(self.words)
+        print(listOfWords)
         for i in range(len(listOfWords)):
             if i==0:
                 rtVal += listOfWords[i]

@@ -170,9 +170,9 @@ def crawl(request):
             # But we can pass other arguments, though.
             # This returns a ID which belongs and will be belong to this task
             # We are going to use that to check task's status.
-            keyword = keyword.split(' ')
-            taskIdGari = scrapyd.schedule('default', 'gariSpider', settings=gariSettings, words=keyword,
-                                          startUrl=gariUrl)
+            # keyword = keyword.split('')
+            
+            taskIdGari = scrapyd.schedule('default', 'gariSpider', settings=gariSettings, words=keyword,startUrl=gariUrl)
             taskIdOlx = scrapyd.schedule('default', 'olxSpider', settings=olxSettings, words=keyword, startUrl=olxUrl)
             taskIdPak = scrapyd.schedule('default', 'pakwheelsSpider', settings=pakSettings, words=keyword, startUrl=pakUrl)
 
