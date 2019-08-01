@@ -43,7 +43,7 @@ def pakURLs(keyword):
 
     last_page = int(pattern.search(last_page_link).group(1))
 
-    all_urls = [my_url + "&page=" + str(i) for i in range(1, last_page + 1)]
+    all_urls = [my_url + "&page=" + str(i) for i in range(1, 6)]
     # print(all_urls)
 
     all_url_string = ' '.join(all_urls)
