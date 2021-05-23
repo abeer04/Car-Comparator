@@ -10,21 +10,21 @@ These instructions will get you a copy of the project up and running on your loc
 Create a virtual environment, activate it and install the required packages:
 #### Conda:
 ```
-conda create -n CarCompare python=3.7
-conda activate CarCompare
+conda create -n CarCompareVenv python=3.7
+conda activate CarCompareVenv
 pip install -r requirements.txt
 ```
 #### Python:
 On Windows, run:
 ```
-python3 -m venv CarCompare
-CarCompare\Scripts\activate.bat
+python3 -m venv CarCompareVenv
+CarCompareVenv\Scripts\activate.bat
 pip install -r requirements.txt
 ```
 On Unix or MacOS, run:
 ```
-python3 -m venv CarCompare
-source tutorial-env/bin/activate
+python3 -m venv CarCompareVenv
+source CarCompareVenv/bin/activate
 pip install -r requirements.txt
 ```
 
